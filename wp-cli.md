@@ -1,4 +1,4 @@
-# Notes and Process of project setup 
+# WP CLI Cookbook
 
 [TOC]
 
