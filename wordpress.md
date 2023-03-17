@@ -21,5 +21,60 @@ To add a post from a form on the front-end of a WordPress site, you can follow t
 
 6. Once the post and attachment posts are created, you can redirect the user to the newly created post using the get_permalink() function to get the URL of the post.
 
+```php 
+// Process form data
+if ( isset( $_POST['submit'] ) ) {
+    // Get post data from form
+    $post_title = sanitize_text_field( $_POST['post_title'] );
+    $post_content = wp_kses_post( $_POST['post_content'] );
+    $author_name = sanitize_text_field( $_POST['author_name'] );
+    $file_upload = $_FILES['file_upload'];
 
+    // Set up post data
+    $post_data = array(
+        'post_title' => $post_title,
+        'post_content' => $post_content,
+        'post_author' => 0, // Will set this later
+        'post_type' => 'post',
+        'post_status' => 'publish'
+    );
+
+    // Insert post and get post ID
+    $post_id = wp_insert_post( $post_data );
+
+    // Set post author based on provided name
+    $user = get_user_by( 'login', $author_name );
+    if ( $user ) {
+        wp_update_post( array(
+            'ID' => $post_id,
+            'post_author' => $user->ID
+        ) );
+    }
+
+    // Handle file upload
+    if ( isset( $file_upload['name'] ) && ! empty( $file_upload['name'] ) ) {
+        $file_info = wp_handle_upload( $file_upload, array( 'test_form' => false ) );
+        if ( $file_info && ! isset( $file_info['error'] ) ) {
+            $attachment = array(
+                'post_mime_type' => $file_info['type'],
+                'post_title' => preg_replace( '/\.[^.]+$/', '', basename( $file_info['file'] ) ),
+                'post_content' => '',
+                'post_status' => 'inherit'
+            );
+
+            // Insert attachment post
+            $attachment_id = wp_insert_attachment( $attachment, $file_info['file'], $post_id );
+
+            // Update attachment metadata
+            $attachment_data = wp_generate_attachment_metadata( $attachment_id, $file_info['file'] );
+            wp_update_attachment_metadata( $attachment_id, $attachment_data );
+        }
+    }
+
+    // Redirect to newly created post
+    if ( $post_id ) {
+       wp_redirect(get_permalink());
+       }
+
+```
 
