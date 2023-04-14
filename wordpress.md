@@ -1,5 +1,38 @@
 # Wordpress Cookbook 
 [TOC]
+
+## send mail notification when update is available 
+
+```php
+<?php
+// Load WordPress functions
+require_once('/path/to/wp-load.php');
+
+// Check for core updates
+$core_updates = get_core_updates();
+if (!empty($core_updates)) {
+    // Core update available
+    $message = "WordPress core update available: ";
+    foreach ($core_updates as $update) {
+        $message .= $update->version . "\n";
+    }
+ 
+}
+
+// Check for plugin updates
+$plugin_updates = get_plugin_updates();
+if (!empty($plugin_updates)) {
+    // Plugin updates available
+    $message .= "Plugin updates available:\n";
+    foreach ($plugin_updates as $plugin_file => $update) {
+        $message .= $update->Name . " (" . $update->Version . ")\n";
+    }
+}
+
+    wp_mail('admin@example.com', 'Wordpress Core & Plugin updates available', $message);
+
+```
+
 ## import website with ai1wm
 1. upload file in the ai1wm-backup folder 
 2. install and activate ai1wm plugin 
